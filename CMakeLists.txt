@@ -3,4 +3,6 @@ project(n_body)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(n_body main.cpp)
+add_executable(test main.cpp)
+
+target_include_directories(test PUBLIC headers)
