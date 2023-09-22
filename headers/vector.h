@@ -6,9 +6,11 @@
 #define N_BODY_VECTOR_H
 
 #include <cstddef>
+#include <iostream>
 #include <array>
 #include <vector>
 #include <cassert>
+#include <cmath>
 
 namespace phys {
     template <size_t ndim, typename T>
@@ -51,25 +53,25 @@ namespace phys {
          * OP overloads for dot and cross product, and others
          */
 
-        friend vector operator+(vector& a, vector& b) {
-            vector ret{{a}};
+        constexpr vector operator+(vector& b) const{
+            vector ret{{*this}};
             for(auto i = 0; i < ndim; i++) {
                 ret[i] += b[i];
             }
             return ret;
         }
 
-        friend vector operator-(vector& a, vector& b) {
-            vector<ndim, T> ret;
+        constexpr vector operator-(vector& b) const{
+            vector ret{{*this}};
             for(auto i = 0; i < ndim; i++) {
-                ret[i] = a[i] - b[i];
+                ret[i] -= b[i];
             }
             return ret;
         }
 
         vector& operator-() {
             for(auto& v : this->data) {
-                v *= static_cast<T>(-1);
+                v *= -v;
             }
             return *this;
         }
@@ -79,6 +81,54 @@ namespace phys {
                 data[i] += a[i];
             }
             return *this;
+        }
+
+        vector& operator-=(vector& a) {
+            for(auto i = 0; i < ndim; i++) {
+                data[i] -= a[i];
+            }
+            return *this;
+        }
+
+        vector operator*(T& a) const{
+            vector<ndim, T> ret{*this};
+            for(auto v : ret) {
+                v *= a;
+            }
+            return ret;
+        }
+
+        vector& operator*=(T& a) {
+            for(auto& e : data) {
+                e *= a;
+            }
+            return *this;
+        }
+
+        vector& operator/=(T& a) {
+            for(auto& e : data) {
+                e /= a;
+            }
+            return *this;
+        }
+
+        vector& operator/=(const T& a) {
+            for(auto& e : data) {
+                e /= a;
+            }
+            return *this;
+        }
+
+        constexpr T abs() const{
+            T ret = 0;
+            for(auto& e : this->data) {
+                ret += std::pow(e, 2);
+            }
+            return std::sqrt(ret);
+        }
+
+        constexpr T abs_sqr() const {
+            return std::sqrt(abs());
         }
 
         constexpr auto& operator[] (dims d) {

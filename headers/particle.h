@@ -38,6 +38,7 @@ namespace phys {
         T mass;
         vector<3, T> pos;
         vector<3, T> vel;
+        vector<3, T> acl;
     };
 
 } // phys

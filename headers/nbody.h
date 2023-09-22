@@ -11,6 +11,10 @@
 #include "vector.h"
 #include "particle.h"
 
+using phys::vector<3, double>::dims::x;
+using phys::vector<3, double>::dims::y;
+using phys::vector<3, double>::dims::z;
+
 namespace phys {
 
     class nbodysim {
@@ -39,32 +43,54 @@ namespace phys {
 
         void add_particle(const particle<double>& p) {
             data.emplace_back(p);
-        }
-
-        void add_particle(double mass, const vector<3, double>& position, vector<3, double> velocity = {{0,0,0}}) {
-            data.emplace_back(mass, position, velocity);
-
             for (auto i = data.begin(); i != data.end() - 1; i++) {
                 pairs.emplace_back(&(*i), &data.back());
             }
         }
 
-        template<typename T>
-         void fill_pairwise_vec() noexcept {
-            std::vector<std::pair<T, T>> result;
-            result.erase();
-            result.reserve(data.size() * data.size());
+        /*
+         * math functions
+         */
 
+
+
+        void run(size_t seconds) {
+            auto num_steps = static_cast<size_t>(static_cast<double>(seconds) / delta_t);
+            for(auto i = 0; i < num_steps; i++) {
+
+            }
+        }
+
+    private:
+
+        [[nodiscard]] auto force(std::pair<particle<double>*, particle<double>*>& pair) const {
+            //F = G*m1*m2/(r^2)
+            return G * pair.first->mass * pair.second->mass / (pair.second->pos - pair.first->pos).abs_sqr();
+        };
+
+        template<typename T>
+        void fill_pairwise_vec() noexcept {
+            pairs.erase(pairs.begin(), pairs.end());
             for(auto i = data.begin(); i != data.end() - 1; i++) {
                 for(auto j = data.begin() + std::distance(data.begin(), i) + 1; j != data.end(); j++) {
                     pairs.emplace_back(&(*i), &(*j));
                 }
             }
-
-            return result;
         }
 
-    private:
+        void calculate_step_st() {
+            for(auto& pair : pairs) {
+                auto force_1 = force(pair);
+
+                //relative unit position vector
+                auto unit_v = (pair.second->pos - pair.first->pos);
+                unit_v /= unit_v.abs();
+
+                auto force_1_v = unit_v * force_1;
+                auto force_2_v = (-unit_v) * force_1;
+            }
+        }
+
         std::vector<std::pair<particle<double>*, particle<double>*>> pairs;
         std::vector<particle<double>> data;
         double delta_t; //time granularity
