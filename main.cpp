@@ -20,6 +20,11 @@ TEST(VECTOR, multiply) {
     ASSERT_DOUBLE_EQ(0.5, (a/=6)[x]);
 }
 
+TEST(VECTOR, compare) {
+    phys::vector<3, double> a{{1,2,3}}, b{{0.5, 1, 1.5}};
+    ASSERT_TRUE((a/2) == b);
+}
+
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

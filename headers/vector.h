@@ -19,6 +19,8 @@ namespace phys {
         vector(std::array<T, ndim>&& old) : data(old) {}
         explicit vector(std::array<T, ndim>& old) : data(old) {}
 
+        constexpr vector(const vector& vector1) noexcept : data(vector1.data) {}
+
         enum class dims : char {
             x = 0,
             y,
@@ -34,6 +36,10 @@ namespace phys {
 
         constexpr auto end() {
             return data.end();
+        }
+
+        constexpr auto dim() {
+            return data.size();
         }
 
         /*
@@ -52,6 +58,13 @@ namespace phys {
         /*
          * OP overloads for dot and cross product, and others
          */
+
+        constexpr bool operator==(vector& b) {
+            for(auto i = 0; i < dim(); i++) {
+                if(b[i] != this->data[i]) return false;
+            }
+            return true;
+        }
 
         constexpr vector operator+(vector& b) const{
             vector ret{{*this}};
