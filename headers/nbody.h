@@ -38,26 +38,28 @@ namespace phys {
                         }}
                         ));
             }
+
+            fill_pairwise_vec<double>();
             
         }
 
         void add_particle(const particle<double>& p) {
-            data.emplace_back(p);
+            data.push_back(p);
             for (auto i = data.begin(); i != data.end() - 1; i++) {
                 pairs.emplace_back(&(*i), &data.back());
             }
         }
 
-        /*
-         * math functions
-         */
-
-
-
-        void run(size_t seconds) {
-            auto num_steps = static_cast<size_t>(static_cast<double>(seconds) / delta_t);
+        void run(double seconds) {
+            auto num_steps = static_cast<size_t>(seconds / delta_t);
             for(auto i = 0; i < num_steps; i++) {
+                calculate_step_st();
+            }
+        }
 
+        void print() {
+            for(auto i = data.begin(); i != data.end(); i++) {
+                std::cout << std::distance(data.begin(), i) << " Pos: " << i->pos << "\n";
             }
         }
 
@@ -65,12 +67,13 @@ namespace phys {
 
         [[nodiscard]] auto force(std::pair<particle<double>*, particle<double>*>& pair) const {
             //F = G*m1*m2/(r^2)
-            return G * pair.first->mass * pair.second->mass / (pair.second->pos - pair.first->pos).abs_sqr();
+            return G * pair.first->mass * pair.second->mass / (pair.second->pos - pair.first->pos).abs_squared();
         };
 
         template<typename T>
         void fill_pairwise_vec() noexcept {
             pairs.erase(pairs.begin(), pairs.end());
+            if(pairs.empty()) return;
             for(auto i = data.begin(); i != data.end() - 1; i++) {
                 for(auto j = data.begin() + std::distance(data.begin(), i) + 1; j != data.end(); j++) {
                     pairs.emplace_back(&(*i), &(*j));
@@ -80,14 +83,28 @@ namespace phys {
 
         void calculate_step_st() {
             for(auto& pair : pairs) {
-                auto force_1 = force(pair);
+                auto force_magnitude = force(pair);
 
-                //relative unit position vector
-                auto unit_v = (pair.second->pos - pair.first->pos);
-                unit_v /= unit_v.abs();
+                // unit distance vector
+                auto pos_unit_vector = (pair.second->pos - pair.first->pos).unit_v();
+                pos_unit_vector /= pos_unit_vector.abs();
 
-                auto force_1_v = unit_v * force_1;
-                auto force_2_v = (-unit_v) * force_1;
+                auto force_1_v = pos_unit_vector * force_magnitude;
+
+                //acceleration
+                pair.first->acl += force_1_v * delta_t;
+                pair.second->acl -= pair.first->acl;
+            }
+
+            //velocity
+            for(auto& pair : pairs) {
+                pair.first->vel += pair.first->acl * delta_t;
+                pair.second->vel += pair.second->acl * delta_t;
+            }
+            //position
+            for(auto& pair : pairs) {
+                pair.first->pos += pair.first->vel * delta_t;
+                pair.second->pos += pair.second->vel * delta_t;
             }
         }
 

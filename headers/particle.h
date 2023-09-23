@@ -18,9 +18,9 @@ namespace phys {
     struct particle {
         //big five
 
-        particle(T mass_, vector<3, double> position, vector<3, double> velocity = {{0,0,0}}) : mass(mass_), pos(position), vel(velocity) {}
-        particle(const particle& p) : mass(p.mass), pos(p.pos), vel(p.vel) {};
-        particle(particle&& p) noexcept : mass(p.mass), pos(p.pos), vel(p.vel) {};
+        particle(T mass_, vector<3, double> position, vector<3, double> velocity = {{0,0,0}}, vector<3, double> acceleration = {{0,0,0}}) : mass(mass_), pos(position), vel(velocity), acl(acceleration) {}
+        particle(const particle& p) : mass(p.mass), pos(p.pos), vel(p.vel), acl(p.acl) {};
+        particle(particle&& p) noexcept : mass(p.mass), pos(p.pos), vel(p.vel), acl(p.acl) {};
 
         particle& operator=(const particle& p) {
             mass = p.mass;

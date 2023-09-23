@@ -83,6 +83,13 @@ namespace phys {
             return *this;
         }
 
+        vector& operator+=(vector&& a) {
+            for(auto i = 0; i < ndim; i++) {
+                data[i] += a[i];
+            }
+            return *this;
+        }
+
         vector& operator-=(vector& a) {
             for(auto i = 0; i < ndim; i++) {
                 data[i] -= a[i];
@@ -98,11 +105,42 @@ namespace phys {
             return ret;
         }
 
+        vector operator*(T&& a) const{
+            vector<ndim, T> ret{*this};
+            for(auto v : ret) {
+                v *= a;
+            }
+            return ret;
+        }
+
         vector& operator*=(T& a) {
             for(auto& e : data) {
                 e *= a;
             }
             return *this;
+        }
+
+        vector& operator*=(T&& a) {
+            for(auto& e : data) {
+                e *= a;
+            }
+            return *this;
+        }
+
+        vector operator/(T& a) {
+            vector ret{*this};
+            for(auto& e : ret) {
+                e /= a;
+            }
+            return ret;
+        }
+
+        vector operator/(T&& a) {
+            vector ret{*this};
+            for(auto& e : ret) {
+                e /= a;
+            }
+            return ret;
         }
 
         vector& operator/=(T& a) {
@@ -120,15 +158,20 @@ namespace phys {
         }
 
         constexpr T abs() const{
+            return std::sqrt(abs_squared());
+        }
+
+        constexpr T abs_squared() const {
             T ret = 0;
             for(auto& e : this->data) {
                 ret += std::pow(e, 2);
             }
-            return std::sqrt(ret);
+            return ret;
         }
 
-        constexpr T abs_sqr() const {
-            return std::sqrt(abs());
+        constexpr auto unit_v() const {
+            vector ret{*this};
+            return ret / ret.abs();
         }
 
         constexpr auto& operator[] (dims d) {
