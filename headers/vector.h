@@ -11,17 +11,37 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
+#include <type_traits>
+#include <cstdint>
+#include <algorithm>
+#include <ranges>
+
+template <typename T>
+concept FloatingPoint = std::is_floating_point_v<T>;
 
 namespace phys {
-    template <size_t ndim, typename T>
+    template <size_t ndim, FloatingPoint T>
     class vector {
     public:
-        vector(std::array<T, ndim>&& old) : data(old) {}
-        explicit vector(std::array<T, ndim>& old) : data(old) {}
+        explicit constexpr vector(std::array<T, ndim>&& old) : data(std::move(old)) {}
+        explicit constexpr vector(const std::array<T, ndim>& old) : data(old) {}
+        constexpr vector(T args...) : data{{args}} {}
 
-        constexpr vector(const vector& vector1) noexcept : data(vector1.data) {}
+        constexpr vector(const vector& old) noexcept : data{old.data} {}
+        constexpr vector(vector && old)  noexcept : data(std::move(old.data)) {}
 
-        enum class dims : char {
+        constexpr vector& operator=(const vector& other) {
+            data = other.data;
+            return *this;
+        };
+
+        constexpr vector& operator=(vector&& old) {
+            data = std::move(old.data);
+            return *this;
+        }
+
+
+        enum class dims : std::uint8_t {
             x = 0,
             y,
             z,
@@ -29,6 +49,13 @@ namespace phys {
             w,
             v, //more dims usually not necessary
         };
+
+        using dims::x;
+        using dims::y;
+        using dims::z;
+        using dims::t;
+        using dims::w;
+        using dims::v;
 
         constexpr auto begin() {
             return data.begin();
@@ -59,14 +86,14 @@ namespace phys {
          * OP overloads for dot and cross product, and others
          */
 
-        constexpr bool operator==(vector& b) {
+        constexpr bool operator==(const vector& b) {
             for(auto i = 0; i < dim(); i++) {
                 if(b[i] != this->data[i]) return false;
             }
             return true;
         }
 
-        constexpr vector operator+(vector& b) const{
+        constexpr vector operator+(const vector& b) const{
             vector ret{{*this}};
             for(auto i = 0; i < ndim; i++) {
                 ret[i] += b[i];
@@ -74,7 +101,7 @@ namespace phys {
             return ret;
         }
 
-        constexpr vector operator-(vector& b) const{
+        constexpr vector operator-(const vector& b) const{
             vector ret{{*this}};
             for(auto i = 0; i < ndim; i++) {
                 ret[i] -= b[i];
@@ -110,9 +137,16 @@ namespace phys {
             return *this;
         }
 
+        vector& operator-=(vector&& a) {
+            for(auto i = 0; i < ndim; i++) {
+                data[i] -= a[i];
+            }
+            return *this;
+        }
+
         vector operator*(T& a) const{
             vector<ndim, T> ret{*this};
-            for(auto v : ret) {
+            for(auto& v : ret) {
                 v *= a;
             }
             return ret;
@@ -120,7 +154,7 @@ namespace phys {
 
         vector operator*(T&& a) const{
             vector<ndim, T> ret{*this};
-            for(auto v : ret) {
+            for(auto& v : ret) {
                 v *= a;
             }
             return ret;
@@ -187,6 +221,23 @@ namespace phys {
             return ret / ret.abs();
         }
 
+        constexpr vector<3, T> operator*(const vector<3, T>& rhs) {
+            static_assert(ndim == 3);
+            vector<3, T> result;
+            result[x] = this->data[y] * rhs[z] - this->data[z] * data[y];
+            result[y] = -(this->data[x] * rhs[z] - this->data[z] * data[x]);
+            result[z] = this->data[x] * rhs[y] - this->data[2] * data[x];
+            return std::move(result);
+        }
+
+        constexpr T dot(const vector& rhs) {
+            T result;
+            for (auto i = x; i < ndim; i++) {
+                result += this->data[i] * rhs[i];
+            }
+            return std::move(result);
+        }
+
         constexpr auto& operator[] (dims d) {
             return data[static_cast<size_t>(d)];
         }
@@ -198,6 +249,7 @@ namespace phys {
     private:
         std::array<T, ndim> data;
     };
+
 }
 
 

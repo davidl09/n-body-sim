@@ -5,8 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(GTest REQUIRED)
 
-add_executable(test main.cpp)
+#add_subdirectory(sdl-main)
 
-target_include_directories(test PUBLIC headers)
+add_executable(n_body_sdl main.cpp)
 
-target_link_libraries(test PUBLIC ${GTEST_LIBRARIES} pthread)
+
+target_include_directories(n_body_sdl PUBLIC headers)
